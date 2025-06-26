@@ -11,12 +11,12 @@ jobs:
         with:
           fetch-depth: 0
 
-      - name: Run TruffleHog
-        uses: trufflesecurity/trufflehog@main
-        with:
-          base: ""
-          head: ${{ github.ref_name }}
-          extra_args: --results=verified,unverified,unknown,filtered_unverified
+      # - name: Run TruffleHog
+      #   uses: trufflesecurity/trufflehog@main
+      #   with:
+      #     base: ""
+      #     head: ${{ github.ref_name }}
+      #     extra_args: --results=verified,unverified,unknown,filtered_unverified
 
       - name: TruffleHog OSS 
         id: trufflehog 

@@ -18,16 +18,26 @@ jobs:
       #     head: ${{ github.ref_name }}
       #     extra_args: --results=verified,unverified,unknown,filtered_unverified
 
-      - name: TruffleHog OSS 
-        id: trufflehog 
-        uses: trufflesecurity/trufflehog@main
-        continue-on-error: true 
-        with: 
-          path: ./ 
-          base: "${{ github.event.repository.default_branch }}" 
-          head: HEAD 
-          extra_args: --debug --only-verified
+      - name: Set TruffleHog Scan Range
+        id: set-scan-range
+        run: |
+          if [ "${{ github.event_name }}" == "pull_request" ]; then
+            echo "base=${{ github.event.pull_request.base.sha }}" >> $GITHUB_OUTPUT
+            echo "head=${{ github.event.pull_request.head.sha }}" >> $GITHUB_OUTPUT
+          else
+            echo "base=${{ github.event.before }}" >> $GITHUB_OUTPUT
+            echo "head=${{ github.event.after }}" >> $GITHUB_OUTPUT
+          fi
 
-      - name: Scan Results Status 
-        if: steps.trufflehog.outcome == 'failure' 
+      - name: TruffleHog OSS
+        id: trufflehog
+        uses: trufflesecurity/trufflehog@main
+        continue-on-error: true
+        with:
+          base: "${{ steps.set-scan-range.outputs.base }}"
+          head: "${{ steps.set-scan-range.outputs.head }}"
+          extra_args: --only-verified --results=verified,
+      - name: Scan Results Status
+        if: steps.trufflehog.outcome == 'failure'
         run: exit 1
+

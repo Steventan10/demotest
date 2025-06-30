@@ -19,16 +19,7 @@ jobs:
       - name: Setup Python
         uses: actions/setup-python@v5
 
-      - name: Install Semgrep
-        run: pip install semgrep
-
-      - name: Run Semgrep with rules
-        run: |
-          semgrep \
-            --config p/ci \
-            --config p/secrets \
-            --config ./semgrep-rules/ \
-            --error
+      # ✅ 1) Cache pip dependencies SEBELUM install
       - name: Cache pip dependencies
         uses: actions/cache@v4
         with:
@@ -37,5 +28,15 @@ jobs:
           restore-keys: |
             ${{ runner.os }}-pip-
 
+      # ✅ 2) Install dependencies dari requirements.txt
       - name: Install dependencies
         run: pip install -r requirements.txt
+
+      # ✅ 3) Run Semgrep (Semgrep sudah di-install via requirements.txt)
+      - name: Run Semgrep with rules
+        run: |
+          semgrep \
+            --config p/ci \
+            --config p/secrets \
+            --config ./semgrep-rules/ \
+            --error

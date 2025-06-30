@@ -1,26 +1,72 @@
+name: Semgrep Credential Scanner
+
 on:
   workflow_dispatch: {}
   pull_request: {}
   push:
     branches:
-    - main
-    - master
+      - main
+      - master
     paths:
-    - .github/workflows/semgrep.yml
+      - '**/.env*'           # Scan semua file .env
+      - '**/*.php'           # File PHP (untuk Laravel)
+      - '.github/workflows/**' # File workflow
   schedule:
-  # random HH:MM to avoid a load spike on GitHub Actions at 00:00
-  - cron: 13 21 * * *
-name: Semgrep
+    - cron: '13 21 * * *'    # Daily scan jam 21:13 UTC
+
 jobs:
-  semgrep:
-    name: semgrep/ci
+  semgrep-scan:
+    name: semgrep/credential-scan
     runs-on: ubuntu-latest
     permissions:
       contents: read
+      security-events: write  # Untuk upload hasil ke GitHub Security
+    
     env:
       SEMGREP_APP_TOKEN: ${{ secrets.SEMGREP_APP_TOKEN }}
-    container:
-      image: semgrep/semgrep
+      SEMGREP_RULES: "p/secrets .semgrep-custom-rules.yml"  # Gabungan rules
+
     steps:
-    - uses: actions/checkout@v4
-    - run: semgrep ci
+    - name: Checkout code
+      uses: actions/checkout@v4
+      with:
+        fetch-depth: 0  # Untuk analisis git lengkap
+
+    - name: Create custom rules file
+      run: |
+        cat << 'EOF' > .semgrep-custom-rules.yml
+        rules:
+          - id: env-secrets
+            patterns:
+              - pattern: |
+                  $KEY=$VALUE
+              - metavariable-regex:
+                  metavariable: $KEY
+                  regex: "(PASSWORD|SECRET|KEY|TOKEN|ACCESS_KEY|PRIVATE_KEY|API_KEY|DATABASE|DB_PASS|REDIS_PASSWORD|SENDGRID|MAIL_PASSWORD|AWS_)"
+              - metavariable-regex:
+                  metavariable: $VALUE
+                  regex: "(?i)([a-f0-9]{32,}|[A-Za-z0-9+/=]{40,}|gh[pousr]_[a-zA-Z0-9]+|AKIA[0-9A-Z]{16}|SG\\.[a-zA-Z0-9_-]+\\.[a-zA-Z0-9_-]+)"
+            message: "Hardcoded secret detected: {{$KEY}}"
+            severity: ERROR
+            languages: [ini]
+        EOF
+
+    - name: Run Semgrep Scan
+      run: |
+        semgrep ci \
+          --config=${{ env.SEMGREP_RULES }} \
+          --sarif \
+          --output=semgrep-results.sarif \
+          --error-on-findings \
+          --metrics=off
+
+    - name: Upload results to GitHub Security
+      uses: github/codeql-action/upload-sarif@v2
+      with:
+        sarif_file: semgrep-results.sarif
+
+    - name: Fail if secrets found
+      if: failure()
+      run: |
+        echo "::error::CREDENTIAL LEAK DETECTED! Check GitHub Security tab for details"
+        exit 1

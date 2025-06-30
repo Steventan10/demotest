@@ -17,12 +17,3 @@ jobs:
           base: ""
           head: ${{ github.ref_name }}
           extra_args: --results=verified,unverified,unknown,filtered_unverified
-
-      # - name: TruffleHog OSS
-      #   id: trufflehog
-      #   uses: trufflesecurity/trufflehog@main
-      #   continue-on-error: true
-      #   with:
-      #     base: ${{ github.event.before }}
-      #     head: ${{ github.event.after }}
-      #     extra_args: --debug --results=verified,unverified,unknown,filtered_unverified

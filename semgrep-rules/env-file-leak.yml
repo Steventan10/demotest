@@ -1,0 +1,9 @@
+rules:
+  - id: env-file-contains-secret
+    pattern-regex: (?i)^(.*(SECRET|PASSWORD|TOKEN|API[_-]?KEY).*)=(.*)
+    message: "Potential secret in .env file. Use vault or secret manager instead!"
+    severity: ERROR
+    languages: [generic]
+    paths:
+      include:
+        - "**/.env"

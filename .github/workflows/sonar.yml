@@ -22,3 +22,5 @@ jobs:
         args: >
          -Dsonar.projectKey=${{ vars.SONAR_PROJECT_KEY }}
          -Dsonar.organization=${{ vars.SONAR_ORG_KEY }}
+         -Dsonar.projectBaseDir=. 
+         -Dsonar.sources=app,config,routes,tests

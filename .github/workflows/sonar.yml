@@ -21,4 +21,4 @@ jobs:
         projectBaseDir: app/src
         args: >
          -Dsonar.projectKey=${{ vars.SONAR_PROJECT_KEY }}
-         s-Dsonar.organization=${{ vars.SONAR_ORG_KEY }}
+         -Dsonar.organization=${{ vars.SONAR_ORG_KEY }}

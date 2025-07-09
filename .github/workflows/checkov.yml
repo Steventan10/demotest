@@ -14,9 +14,12 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v3
+
+      - name: Upgrade Checkov
+        run: pip3 install -U checkov
+        
       - name: Checkov GitHub Action
         uses: bridgecrewio/checkov-action@v12.1347.0
         with:
           output_format: cli
-          output_file_path: console
         

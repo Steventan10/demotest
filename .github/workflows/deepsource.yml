@@ -1,24 +1,24 @@
-on:
-  # Trigger analysis when pushing to your main branches, and when creating a pull request.
-  push:
-    branches:
-      - main
-      
-name: Deepsoruce Workflow
-jobs:
-  deepsource:
-    runs-on: ubuntu-latest
-    steps:
-    - uses: actions/checkout@v3
-    with:
-      ref: ${{ github.event.pull_request.head.sha }}
+name: CI with DeepSource Coverage Reporting
 
-    - name: Report test coverage to DeepSource
+on:
+  push:
+    branches: [main]
+
+jobs:
+  test:
+    runs-on: ubuntu-latest
+
+    steps:
+      - uses: actions/checkout@v3
+        with:
+          ref: ${{ github.event.pull_request.head.sha }}
+
+      - name: Report test coverage to DeepSource
         run: |
           curl https://deepsource.io/cli | sh
           ./bin/deepsource report \
-            --analyzer test-coverage \ 
+            --analyzer test-coverage \
             --key python \
             --value-file ./coverage.xml
-    env:
-      DEEPSOURCE_DSN: ${{ secrets.DEEPSOURCE_DSN }}
+        env:
+          DEEPSOURCE_DSN: ${{ secrets.DEEPSOURCE_DSN }}
